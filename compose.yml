@@ -1,0 +1,17 @@
+---
+services:
+    mysqldb:
+      container_name: mysqldb
+      image: shaikmustafa77/hussian:db
+      ports:
+        - "3306:3306"
+
+    application:
+      container_name: mycont
+      image: shaikmustafa77/hussian:app
+      ports:
+        - "1212:80"
+      depends_on:
+        - mysqldb
+      
+    
