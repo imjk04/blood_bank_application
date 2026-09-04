@@ -1,0 +1,57 @@
+pipeline {
+    agent { label 'production' }   // Run this pipeline on a Jenkins agent (node) labeled "production"
+
+    stages {
+
+        stage('Code Checkout') {   // Stage 1: Get the source code
+            steps {
+                git 'https://github.com/imjk04/blood_bank_application.git'  
+                // Clone the GitHub repository into the Jenkins workspace
+            }
+        }
+
+        stage('CQA') {   // Stage 2: Code Quality Analysis with SonarQube
+            environment {
+                scannerHome = tool 'sonar1'  
+                // Define environment variable pointing to SonarQube scanner tool installation
+            }
+            steps {
+                withSonarQubeEnv('sonar2') {  
+                    // Use SonarQube server configuration named "sonar2"
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=bloodbank"  
+                    // Run SonarQube scanner to analyze code quality, project identified as "bloodbank"
+                }
+            }
+        }
+
+        stage('Image-Build') {   // Stage 3: Build Docker images
+            steps {
+                sh 'docker build -t imjk04/bloodbank:database database'  
+                // Build Docker image for database service from "database" directory
+                sh 'docker build -t imjk04/bloodbank:application .'  
+                // Build Docker image for application service from current directory
+            }
+        }
+
+        stage('Image-Push') {   // Stage 4: Push Docker images to registry
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'credentials') {  
+                        // Authenticate with Docker registry using Jenkins credentials
+                        sh 'docker push imjk04/bloodbank:database'  
+                        // Push database image to Docker registry
+                        sh 'docker push imjk04/bloodbank:application'  
+                        // Push application image to Docker registry
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {   // Stage 5: Deploy application stack
+            steps {
+                sh 'docker stack deploy -c compose.yml bloodbank'  
+                // Deploy Docker Swarm stack named "bloodbank" using compose.yml file
+            }
+        }
+    }
+}
