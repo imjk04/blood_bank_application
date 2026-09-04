@@ -1,17 +1,25 @@
----
 services:
-    mysqldb:
-      container_name: mysqldb
-      image: shaikmustafa77/hussian:db
-      ports:
-        - "3306:3306"
+  mysqldb:
+    container_name: mysqldb
+    image: imjk04/bloodbank:database
+    ports:
+      - "3306:3306"
+    networks:
+      - bloodbank-network
+    deploy:
+      replicas: 1
 
-    application:
-      container_name: mycont
-      image: shaikmustafa77/hussian:app
-      ports:
-        - "1212:80"
-      depends_on:
-        - mysqldb
-      
-    
+  application:
+    image: imjk04/bloodbank:application
+    ports:
+      - "3535:80"
+    depends_on:
+      - mysqldb
+    networks:
+      - bloodbank-network
+    deploy:
+      replicas: 3
+
+networks:
+  bloodbank-network:
+    driver: overlay
