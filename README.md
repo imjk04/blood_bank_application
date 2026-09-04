@@ -1,246 +1,385 @@
-# ltibloodbank
+# 🩸 Blood Bank Application — CI/CD & DevOps Setup
+
+## 📌 Project Overview
 
-# Setting up Ubuntu Machine
- 
-sudo apt-get update -y
+This project is a **Blood Bank Application** developed using **.NET**.
 
-sudo apt-get install apache2 -y
+The application provides the following major functionalities:
 
-sudo apt-get install php libapache2-mod-php php-mysql php-curl php-gd php-json php-zip php-mbstring -y
+* 👤 User account creation and authentication
+* 🔎 Find blood donors
+* 🩸 Register/Nominate yourself as a blood donor
 
-sudo systemctl restart apache2
+The application is divided into two main services:
 
-sudo systemctl enable apache2
+### 1. Database Service
 
-sudo apt-get install mysql-server -y
+Handles user authentication and account-related operations.
 
---------------------------------------------------------------------------------------------------------------------
+* User registration
+* User authentication
+* Account management
 
-# Connecting to My SQL Database
+### 2. Application Service
 
-mysql -h mysqldb2022.cqyjl3sbn0g1.us-west-2.rds.amazonaws.com -u admin -p
+Handles the core blood bank functionalities.
 
-# Create Database
-Create database customers;
+* Finding blood donors
+* Blood donation registration
+* Donor-related operations
 
-#use DB
+---
 
-use customers;
+# 🏗️ Infrastructure Architecture
 
-# Create table 
-create table donors(id int AUTO_INCREMENT primary key, fname varchar(255) NOT NULL , lname varchar(255) NOT NULL , mobileno BIGINT UNIQUE, city varchar(255) NOT NULL, bfrom date, bto date, dob date, bloodgroup varchar(255) NOT NULL);
+The project uses two servers:
 
-# Insert Values to donors table
+| Server                 | Purpose                                       | Instance Type    |
+| ---------------------- | --------------------------------------------- | ---------------- |
+| **Jenkins Server**     | CI/CD pipeline management                     | `m7i-flex-large` |
+| **Application Server** | Pipeline execution and application deployment | `m7i-flex-large` |
 
-INSERT INTO `donors` (`fname`, `lname`, `mobileno`, `city`, `bfrom`, `bto`, `dob`, `bloodgroup`) VALUES
-('Srikanth', 'Koraveni', '9000736060', 'Pune', '2022-09-28', '2022-12-28', '1998-05-22', 'O_Positive'),
-('Prashanth', 'Katkam', '7989919097', 'Mumbai', '2022-09-17', '2022-11-18', '1998-09-30', 'O_Positive'),
-('Kranthi', 'Khaitha', '9876789871', 'Bangalore', '2022-09-16', '2022-11-08', '1996-07-02', 'B_Positive'),
-('Srinivas', 'Thota', '9812789411', 'Mumbai', '2022-09-18', '2022-10-31', '1992-07-22', 'O_Positive'),
-('Pandya', 'Loka', '9877787887', 'Mumbai', '2022-09-18', '2022-10-09', '1992-07-22', 'B_Positive'),
-('Prajodh', 'Shreya', '9812444411', 'Mumbai', '2022-08-23', '2022-10-31', '1992-07-22', 'B_Positive'),
-('Srinivas', 'Thota', '9812723411', 'Mumbai', '2022-04-19', '2022-10-07', '1992-07-22', 'B_Positive'), 
-('Zaheer', 'Khan', '7788678987', 'Chennai', '2022-09-11', '2022-12-19', '1998-11-11', 'A_Positive');
+The **Application Server** is configured with **28 GB RAM** to support the required application, Docker containers, security scanning, and pipeline workloads.
 
+### High-Level Architecture
 
-# Create table users and assign Values for Signin/Login
+```text
+                    ┌──────────────────────┐
+                    │      Developer       │
+                    │    Pushes Code       │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │       GitHub         │
+                    │   Source Repository  │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │    Jenkins Server    │
+                    │                      │
+                    │  Jenkins + Java      │
+                    │  Docker              │
+                    │  SonarQube           │
+                    └──────────┬───────────┘
+                               │
+                     Private IP Connection
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │  Application Server  │
+                    │                      │
+                    │  Java               │
+                    │  Git                │
+                    │  Docker             │
+                    │  Docker Compose     │
+                    │  Trivy              │
+                    └──────────┬───────────┘
+                               │
+                               ▼
+                    ┌──────────────────────┐
+                    │  Application / CQA   │
+                    │      Pipeline        │
+                    └──────────────────────┘
+```
 
-CREATE TABLE `users` (
-  `username` varchar(80) NOT NULL,
-  `name` varchar(80) NOT NULL,
-  `password` varchar(80) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+---
 
+# 🚀 Practical Setup
 
-# Assign values to users table
+## 1. Create the Jenkins Server
 
-    INSERT INTO `users` (`username`, `name`, `password`) VALUES
-    ('yssyogesh', 'Yogesh Singh', '12345'),
-    ('bsonarika', 'Sonarika Bhadoria', '12345'),
-    ('vishal', 'Vishal Sahu', '12345'),
-    ('prashanth', 'Prashanth Katkam', '12345'),
-    ('vijay', 'Vijay mourya', '12345');
-    
+Create a server with the following configuration:
 
-# Insert Single Values to a Table
+* **Instance Type:** `m7i-flex-large`
+* Install **Java**
+* Install **Docker**
+* Install and configure **Jenkins**
 
-INSERT INTO `users` (`username`, `name`, `password`) VALUES
-('prashanth', 'Prashanth Katkam', '12345');
+The Jenkins server is responsible for managing and triggering the CI/CD pipeline.
 
+---
 
-#Admin Table
+## 2. Create the Application Server
 
-CREATE TABLE `admin` (
-  `username` varchar(80) NOT NULL,
-  `name` varchar(80) NOT NULL,
-  `password` varchar(80) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+Create a second server with the following configuration:
 
-#insert into admin table
+* **Instance Type:** `m7i-flex-large`
+* **RAM:** 28 GB
 
-INSERT INTO `admin` (`username`, `name`, `password`) VALUES
-('admin', 'admin', '12345');
+Install the following tools:
 
-#grant permissions
-GRANT ALL PRIVILEGES ON customers.* TO 'root'@'%' IDENTIFIED BY 'admin123';
-FLUSH PRIVILEGES;
+* Java
+* Git
+* Docker
+* Docker Compose
+* Trivy
 
+The Application Server is used to execute the pipeline workloads and perform application-related operations.
 
-=================================================================================================
-                                #IMP Points
--------------------------------------------------------------------------------------------------
-if connection from linux ec2 to DB is not connecting, then add inbound rule to DB SG as AURORA and assign SG of EC2 Instance.
+---
 
+# 🔗 Connect Jenkins to the Application Server
 
-#DB Endpoint needs to be added
+After setting up both servers, connect the **Jenkins Server** to the **Application Server** using the application's **private IP address**.
 
-vi donate-blood.php
-vi find-donor.php
-vi config.php
-vi search.php
-vi signup.php
-vi deletedata.php
+This allows Jenkins to use the Application Server as a node/agent for running pipeline jobs.
 
-Add admin table name in indexadmin.php
+```text
+Jenkins Server
+      │
+      │ Private IP
+      ▼
+Application Server
+      │
+      ├── Docker
+      ├── Docker Compose
+      ├── Git
+      └── Trivy
+```
 
-Hackathon Repo consists of latest code
+---
 
-# Important Notes To Remember
+# 🐳 SonarQube Setup
 
-Add Endpoint URL of the DB to the congig.php and also for the pages which need the DB Details
+After installing Jenkins and Docker on the Jenkins Server, run SonarQube as a Docker container.
 
-If the Database or Table name is changes please change it accordingly.
+### Run SonarQube
 
+```bash
+docker run -itd \
+  --name CQA \
+  -p 9000:9000 \
+  sonarqube:lts-community
+```
 
-Example: donate-blood.php, find-donor.php, config.php, signup.php, search.php {login}.
+### Verify the Container
 
-NOTE: Add donors table name to index.php and add admin table name to indexadmin.php
+```bash
+docker ps
+```
 
-===================================================================================================
----------------------------------------------------------------------------------------------------
+SonarQube will be available on:
 
-# Git Commands
+```text
+http://<JENKINS_SERVER_IP>:9000
+```
 
-git clone URL
+### Default Credentials
 
-git clone --branch branchname URL
+```text
+Username: admin
+Password: admin
+```
 
-sudo git init
+> ⚠️ Change the default SonarQube password after the initial login.
 
-sudo git remote add origin "https://github.com/prashanthkatam/ltibloodbank.git"
+---
 
-sudo git remote add origin "https://github.com/prashanthkatam/ltibloodbankrepo.git"
+# 🔧 Jenkins Configuration
 
-sudo git remote add origin "https://github.com/prashanthkatam/Hackathon.git"
+Once Jenkins is installed, access the Jenkins dashboard and configure the required plugins and tools.
 
-sudo git remote -v
+## Required Jenkins Plugins
 
-sudo git add .
+Install the following plugins:
 
-sudo git commit -m ""
+### CI/CD Plugins
 
-git remote set-url origin https://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@github.com/prashanthkatam/ltibloodbank.git
+* **Docker Pipeline**
+* **Pipeline Stage View**
+* **SonarQube Scanner**
 
-git remote set-url origin https://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@github.com/prashanthkatam/Hackathon.git
+### Audit & Monitoring Plugins
 
-git remote set-url origin https://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@github.com/prashanthkatam/Hackathon.git
+* **Audit Trail**
+* **Audit Log**
+* **Audit Flow**
 
-sudo git push origin master
+---
 
-# Upload new files
+# 🔍 Jenkins Audit Logging
 
-sudo git init
+Since the Jenkins dashboard can be accessed by multiple users, auditing is important for tracking administrative and user activities.
 
-sudo git add .
+The audit plugins help Jenkins administrators monitor activities such as:
 
-sudo git commit -m ""
+* User login activity
+* Plugin installation
+* Credential changes
+* Configuration changes
+* Job-related activities
+* Deletion of credentials or other resources
+* Other administrative actions
 
-sudo git push origin master
+For example, administrators can investigate:
 
---------------------------------------------------------------------------------------------------------------------
+> **Who performed an action, what action was performed, and when it was performed.**
 
-# Install Jenkins
+Depending on the plugin and configuration, additional information such as the source IP address may also be recorded.
 
-sudo apt-get update
+### Important Note
 
-sudo apt-get install openjdk-8-jdk
+Audit plugins generally start recording events **after they are installed and configured**. They do not normally provide historical audit records from before installation.
 
-wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+---
 
-sudo sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+# 📋 Verify Audit Logs
 
-sudo apt-get update
+After installing and configuring the audit plugins:
 
-sudo apt-get install jenkins
+1. Go to **Manage Jenkins**
+2. Open the configured **Audit Flow / Audit Logs** section
+3. Access the Jenkins dashboard from another browser/session
+4. Perform actions such as installing a plugin
+5. Return to the audit log
+6. Verify that the activities are recorded
 
-sudo apt install git
+For example:
 
---------------------------------------------------------------------------------------------------------------------
+```text
+User Login
+     ↓
+Dashboard Access
+     ↓
+Plugin Installation
+     ↓
+Configuration Changes
+     ↓
+Audit Log
+```
 
-# Push Apache Logs to Cloud Watch
+This allows Jenkins administrators to monitor activities performed by users.
 
-1.	Create an EC2 Instance
+---
 
-2.	Create a Role with CloudWatchAgentServerPolicy and attach to EC2 Instance.
+# 📊 Configure SonarQube in Jenkins
 
-3.	Update the Instance
+SonarQube needs to be integrated with Jenkins so that the CI/CD pipeline can perform **code quality analysis**.
 
-sudo apt-get update
+## Step 1 — Generate SonarQube Token
 
-4.	Install Apache2 or any other web server on the Ec2 Instance
+Log in to SonarQube and generate an authentication token.
 
-Sudo apt-get install apache2
+Use the token when configuring SonarQube inside Jenkins.
 
-5.	Download the Package using wget
+---
 
-sudo wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+## Step 2 — Add SonarQube to Jenkins
 
-6.	Install CloudWatch Agent 
+In Jenkins, navigate to:
 
-sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+```text
+Manage Jenkins
+    ↓
+System
+    ↓
+SonarQube installations
+```
 
-7.	Create configuration 
+Add the SonarQube server details.
 
-vi /opt/aws/amazon-cloudwatch-agent/bin/config.json
+Configure the authentication token using Jenkins credentials.
 
-{
-     "agent": {
-         "run_as_user": "root"
-     },    
-     "logs": {
-         "logs_collected": {
-             "files": {
-                 "collect_list": [
-                     {
-                         "file_path": "/var/log/apache2/access.log",
-                         "log_group_name": "myapache-error-log",
-                         "log_stream_name": "{instance_id}"
-                     }
-                 ]
-             }
-         }
-     }
-}
+### Credential Type
 
-8.	Command to Start CloudWatch Service
+Use:
 
-sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+```text
+Secret Text
+```
 
-9.	Now Navigate the AWS Cosole and go to Cloud Watch you can see the log group as mentioned in the config.json and the logs will be flown as the path given in config.json
+Store the SonarQube authentication token securely as a Jenkins credential.
 
-[NOTE: Check for the config.json syntax for the brackets, Create and assign CloudWatchAgentServerPolicy to Instance]
+---
 
---------------------------------------------------------------------------------------------------------------------
+## Step 3 — Configure SonarQube Scanner Tool
 
-# Important SQL Commands for use
+Navigate to:
 
-DELETE FROM Customers;
+```text
+Manage Jenkins
+    ↓
+Tools
+```
 
-show columns from donors;
+Add/configure the **SonarQube Scanner** installation.
 
+This allows Jenkins pipelines to invoke the SonarQube scanner during the CI/CD process.
 
-<html>
-  <body>
-    Hi this is webpage after making changes in GitHub Repo and CI CD Made visible here
-  </body>
-</html>
+---
+
+# 🔄 Overall CI/CD Flow
+
+The expected workflow is:
+
+```text
+Developer
+    │
+    ▼
+GitHub Repository
+    │
+    ▼
+Jenkins
+    │
+    ├── Checkout Source Code
+    │
+    ├── Build .NET Application
+    │
+    ├── SonarQube Code Quality Analysis
+    │
+    ├── Docker Build
+    │
+    ├── Trivy Image Scan
+    │
+    ├── Docker Compose / Deployment
+    │
+    ▼
+Application Server
+    │
+    ▼
+Running Blood Bank Application
+```
+
+---
+
+# 🛡️ DevSecOps Components
+
+The project incorporates several DevOps and DevSecOps tools:
+
+| Tool               | Purpose                                |
+| ------------------ | -------------------------------------- |
+| **GitHub**         | Source code management                 |
+| **Jenkins**        | CI/CD automation                       |
+| **Docker**         | Containerization                       |
+| **Docker Compose** | Multi-container application management |
+| **SonarQube**      | Static code quality analysis           |
+| **Trivy**          | Container image vulnerability scanning |
+| **Audit Plugins**  | Jenkins activity and security auditing |
+| **.NET**           | Application development framework      |
+
+---
+
+# 🎯 Objectives
+
+The main objectives of this setup are:
+
+* Automate the application build and deployment process
+* Maintain a centralized Jenkins CI/CD environment
+* Perform automated code quality checks using SonarQube
+* Scan Docker images for vulnerabilities using Trivy
+* Deploy applications using Docker
+* Maintain audit logs for Jenkins activities
+* Securely manage credentials and authentication tokens
+* Separate CI/CD management from application execution
+
+---
+
+# 📝 Summary
+
+The Blood Bank Application uses a two-server DevOps architecture consisting of a **Jenkins Server** and an **Application Server**.
+
+Jenkins manages the CI/CD pipeline, while the Application Server executes pipeline workloads and handles application deployment. **SonarQube** is integrated for code quality analysis, **Trivy** is used for container vulnerability scanning, and Jenkins audit plugins provide visibility into administrative and user activities.
+
+This setup provides a foundation for implementing a **secure, automated, and auditable CI/CD pipeline** for the .NET Blood Bank Application.
