@@ -1,0 +1,8 @@
+apiVersion: v1                # This resource uses the core Kubernetes API version v1.
+kind: ConfigMap               # Declares the type of resource: a ConfigMap.
+metadata:
+  name: bbapp-config        # The name of this ConfigMap object, here it's "bankapp-config".
+data:                         # The section where key-value pairs of configuration data are defined.
+  DB_HOST: mysqldb            # A key "DB_HOST" with value "mysqldb" (likely the service name of your MySQL DB).
+  DB_PORT: "3306"             # A key "DB_PORT" with value "3306" (the default MySQL port).
+

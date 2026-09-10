@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1       # Uses the networking API group version v1.
+kind: NetworkPolicy                    # Declares this resource is a NetworkPolicy.
+metadata:
+  name: bankapp-allow-ingress          # The name of this NetworkPolicy object is "bankapp-allow-ingress".
+spec:
+  podSelector:                         # Selects which pods this policy applies to.
+    matchLabels:
+      app: application                       # Applies to pods with label "app=nginx".
+  policyTypes:
+  - Ingress                            # This policy defines ingress (incoming traffic) rules.
+  - Egress                             # This policy also defines egress (outgoing traffic) rules.
+  ingress:                             # Ingress rules (who can talk to these pods).
+  - from:
+    - namespaceSelector:               # Allows traffic from a specific namespace.
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx   # Only from namespace labeled "ingress-nginx".
+      podSelector:                     # Further restricts to pods in that namespace.
+        matchLabels:
+          kubernetes.io/metadata.name: ingress-nginx   # Only pods labeled "ingress-nginx".
+  egress:                              # Egress rules (where these pods can talk to).
+  - to:
+      podSelector:
+        matchLabels:
+          app: dbset            # Allows outgoing traffic to pods labeled "app=app-database".
+      ports:
+      - port: 3306                     # Only on port 3306 (MySQL).
+  - to:
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system     # Allows traffic to kube-system namespace.
+      ports:
+      - port: 53                       # Only on port 53 (DNS).
+        protocol: UDP                  # Protocol is UDP (DNS queries).
+

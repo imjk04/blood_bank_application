@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1     # Uses the networking API group version v1, required for Ingress.
+kind: Ingress                        # Declares this resource is an Ingress.
+metadata:
+  name: bankapp-ingress              # The name of this Ingress object is "bankapp-ingress".
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /   # Annotation for NGINX Ingress Controller: rewrites all paths to "/".
+spec:
+  ingressClassName: nginx            # Specifies which Ingress controller should handle this (here, NGINX).
+  rules:                             # Defines routing rules for incoming HTTP traffic.
+    - http:
+        paths:
+          - path: /                  # Matches requests starting with "/" (root path).
+            pathType: Prefix         # "Prefix" means all paths beginning with "/" will match.
+            backend:
+              service:
+                name: appservice     # Routes traffic to the Service named "my-service".
+                port:
+                  number: 80         # Forwards traffic to port 80 of that Service.
+

@@ -1,0 +1,13 @@
+apiVersion: v1                # Specifies this is a core Kubernetes API object (version v1).
+kind: ResourceQuota           # Declares the type of resource being defined: a ResourceQuota.
+metadata:
+  name: k8s-rq                  # The name of this ResourceQuota object, here it's "myrq".
+spec:
+  hard:                       # "hard" defines the maximum resource usage allowed in the namespace.
+    requests.cpu: '2'         # Pods in this namespace can collectively request up to 2 CPUs.
+    requests.memory: 2Gi      # Pods can collectively request up to 2 GiB of memory.
+    limits.cpu: '4'           # Pods can collectively use up to 4 CPUs as their upper limit.
+    limits.memory: 4Gi        # Pods can collectively use up to 4 GiB of memory as their upper limit.
+    pods: "15"                # Maximum of 10 pods can exist in this namespace.
+    services: "8"             # Maximum of 5 services can be created in this namespace.
+

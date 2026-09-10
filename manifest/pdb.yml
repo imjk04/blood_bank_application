@@ -1,0 +1,10 @@
+apiVersion: policy/v1             # Uses the policy API group version v1.
+kind: PodDisruptionBudget         # Declares this resource is a PodDisruptionBudget.
+metadata:
+  name: bbapp-pdb                # The name of this PDB object is "bankapp-pdb".
+spec:
+  minAvailable: 2                  # Ensures at least 2 pods must remain available during voluntary disruptions.
+  selector:
+    matchLabels:
+      app: application                   # Applies this budget to pods with label "app=nginx".
+

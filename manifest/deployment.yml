@@ -1,0 +1,47 @@
+---
+apiVersion: apps/v1                # Uses the apps/v1 API group, required for Deployments.
+kind: Deployment                   # Declares this resource is a Deployment.
+metadata:
+  name: k8s-bb-app                     # The name of the Deployment object is "myapp".
+spec:
+  replicas: 2                      # Ensures 2 pod replicas are running for high availability.
+  selector:
+    matchLabels:
+      app: application                   # Selects pods with label "app=nginx" to be managed by this Deployment.
+  template:
+    metadata:
+      labels:
+        app: application                 # Labels applied to pods created by this Deployment.
+    spec:
+      containers:
+        - name: app-cont              # The container inside the pod is named "cont1".
+          image: imjk04/k8s2:phpappimg   # The container image to run (a PHP app).
+          ports:
+            - containerPort: 80    # Exposes port 80 inside the container for HTTP traffic.
+
+          envFrom:                 # Injects environment variables from a ConfigMap.
+            - configMapRef:
+                name: bbapp-config    # References the ConfigMap named "bankapp-config".
+
+          resources:               # Resource requests and limits for this container.
+            requests:
+              cpu: "100m"          # Requests 100 millicores of CPU (guaranteed minimum).
+              memory: "128Mi"      # Requests 128 MiB of memory (guaranteed minimum).
+            limits:
+              cpu: "200m"          # Limits CPU usage to 200 millicores (maximum allowed).
+              memory: "256Mi"      # Limits memory usage to 256 MiB (maximum allowed).
+
+          livenessProbe:           # Probe to check if the container is still alive.
+            httpGet:
+              path: /              # Sends an HTTP GET request to "/" path.
+              port: 80             # On port 80.
+            initialDelaySeconds: 30 # Waits 30 seconds after container starts before probing.
+            periodSeconds: 10      # Runs the probe every 10 seconds.
+
+          readinessProbe:          # Probe to check if the container is ready to serve traffic.
+            httpGet:
+              path: /              # Sends an HTTP GET request to "/" path.
+              port: 80             # On port 80.
+            initialDelaySeconds: 10 # Waits 10 seconds after container starts before probing.
+            periodSeconds: 5       # Runs the probe every 5 seconds.
+

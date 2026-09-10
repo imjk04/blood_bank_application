@@ -1,0 +1,12 @@
+apiVersion: v1                # Uses the core Kubernetes API version v1.
+kind: Service                 # Declares this resource is a Service.
+metadata:
+  name: appservice            # The name of this Service object is "my-service".
+spec:
+  type: ClusterIP             # Service type is ClusterIP (default) — accessible only inside the cluster.
+  selector:
+    app: application                # Selects pods with label "app=nginx" to route traffic to.
+  ports:
+    - port: 80                # Exposes port 80 on the Service (clients connect here).
+      targetPort: 80          # Forwards traffic to port 80 inside the selected pods.
+

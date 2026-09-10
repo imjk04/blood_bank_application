@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db-statefulset                # Name of the StatefulSet
+spec:
+  serviceName: "db-service"           # Headless service required for stable network IDs
+  replicas: 2                         # Number of database replicas
+  selector:
+    matchLabels:
+      app: dbset                       # Pods managed by this StatefulSet must have this label
+  template:
+    metadata:
+      labels:
+        app: dbset                     # Label applied to pods created by this StatefulSet
+    spec:
+      containers:
+        - name: db-container        # Name of the container
+          image: imjk04/k8s2:phdbimg  # Database image you specified
+          ports:
+            - containerPort: 3306     # Expose MySQL default port (adjust if needed)
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/mysql   # Path inside container where data is stored
+  volumeClaimTemplates:               # Each pod gets its own PVC
+    - metadata:
+        name: k8s-pvc
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 2Gi              # Each replica gets 2Gi of storage
+        storageClassName: gp2         # Adjust to your cluster’s storage class
+
