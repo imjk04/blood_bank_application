@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+    environment {
+        scannerHome = tool 'sonar'
+    }
+    stages {
+        stage('CleanWS') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Code') {
+            steps {
+                git 'https://github.com/imjk04/blood_bank_application.git'
+            }
+        }
+        stage('CQA') {
+            steps {
+                withSonarQubeEnv('sonar') {
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=k8s-bb"
+                }
+            }
+        } 
+        stage('QualityGate') {
+            steps {
+                waitForQualityGate abortPipeline: true, credentialsId: 'sonar-key'
+            }
+        }
+        stage('DockerBuild') {
+            steps {
+                script {
+                    sh 'docker build -t imjk04/k8s2:phpappimg .'
+                    sh 'docker build -t imjk04/k8s2:phdbimg database'
+                }
+            }
+        }
+        stage('ImageScan') {
+            steps {
+                script {
+                    sh 'trivy image imjk04/k8s2:phpappimg'
+                    sh 'trivy image imjk04/k8s2:phdbimg'
+                }
+            }
+        }
+        stage('DockerPush') {
+            steps {
+                script {
+                    withDockerRegistry(credentialsId: 'docker_cred') {
+                        sh 'docker push imjk04/k8s2:phpappimg'
+                        sh 'docker push imjk04/k8s2:phdbimg'
+                    }
+                }
+            }
+        }
+    }
+}
