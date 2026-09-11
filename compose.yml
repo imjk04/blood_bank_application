@@ -1,0 +1,25 @@
+services:
+  mysqldb:
+    container_name: mysqldb
+    image: imjk04/bloodbank:database
+    ports:
+      - "3306:3306"
+    networks:
+      - bloodbank-network
+    deploy:
+      replicas: 1
+
+  application:
+    image: imjk04/bloodbank:application
+    ports:
+      - "3535:80"
+    depends_on:
+      - mysqldb
+    networks:
+      - bloodbank-network
+    deploy:
+      replicas: 3
+
+networks:
+  bloodbank-network:
+    driver: overlay
