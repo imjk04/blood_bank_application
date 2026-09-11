@@ -1,0 +1,19 @@
+apiVersion: autoscaling/v2        # Uses the autoscaling/v2 API, required for advanced metrics.
+kind: HorizontalPodAutoscaler     # Declares this resource is a Horizontal Pod Autoscaler (HPA).
+metadata:
+  name: bbapp-hpa                # The name of this HPA object is "banapp-hpa".
+spec:
+  scaleTargetRef:                 # Defines the target resource this HPA will scale.
+    apiVersion: apps/v1           # The target resource is a Deployment (apps/v1).
+    kind: Deployment              # Specifies that the target is a Deployment.
+    name: k8s-bb-app                  # The name of the Deployment to scale is "myapp".
+  minReplicas: 3                  # The minimum number of pod replicas to maintain is 3.
+  maxReplicas: 7                  # The maximum number of pod replicas allowed is 7.
+  metrics:                        # Defines the metrics used to trigger scaling.
+  - type: Resource                # Metric type is based on resource usage.
+    resource:
+      name: cpu                   # The resource being monitored is CPU.
+      target:
+        type: Utilization         # Target type is average utilization across pods.
+        averageUtilization: 60    # Target average CPU utilization is 60%.
+
