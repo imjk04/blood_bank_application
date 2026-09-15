@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 # EKS Cluster IAM Role
 
 data "aws_iam_policy_document" "assume_role" {
@@ -34,16 +38,12 @@ data "aws_subnets" "public" {
   }
 }
 
-
 # EKS Cluster
 
 resource "aws_eks_cluster" "example" {
   name     = "EKS_CLOUD"
   role_arn = aws_iam_role.example.arn
 
-  # Updated to the latest Amazon EKS supported Kubernetes version (as of July 2026).
-  # Check current versions with: aws eks describe-addon-versions --kubernetes-version <x>
-  # or https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
   version = "1.36"
 
   vpc_config {
@@ -52,16 +52,12 @@ resource "aws_eks_cluster" "example" {
     endpoint_public_access  = true
   }
 
-  # Optional but recommended: enable control plane logging
   enabled_cluster_log_types = ["api", "audit", "authenticator"]
 
-  # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
-  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
   depends_on = [
     aws_iam_role_policy_attachment.example-AmazonEKSClusterPolicy,
   ]
 }
-
 
 # Node Group IAM Role
 
@@ -94,7 +90,6 @@ resource "aws_iam_role_policy_attachment" "example-AmazonEC2ContainerRegistryRea
   role       = aws_iam_role.example1.name
 }
 
-
 # Node Group
 
 resource "aws_eks_node_group" "example" {
@@ -103,7 +98,6 @@ resource "aws_eks_node_group" "example" {
   node_role_arn   = aws_iam_role.example1.arn
   subnet_ids      = data.aws_subnets.public.ids
 
-  # AMI type auto-selects the correct EKS-optimized AMI for the cluster's Kubernetes version.
   ami_type = "AL2023_x86_64_STANDARD"
 
   scaling_config {
@@ -118,15 +112,12 @@ resource "aws_eks_node_group" "example" {
 
   instance_types = ["c7i-flex.large"]
 
-  # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
-  # Otherwise, EKS will not be able to properly delete EC2 Instances and Elastic Network Interfaces.
   depends_on = [
     aws_iam_role_policy_attachment.example-AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.example-AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.example-AmazonEC2ContainerRegistryReadOnly,
   ]
 }
-
 
 # OIDC provider (required for IRSA - IAM Roles for Service Accounts)
 
@@ -139,7 +130,6 @@ resource "aws_iam_openid_connect_provider" "eks" {
   thumbprint_list = [data.tls_certificate.eks.certificates[0].sha1_fingerprint]
   url             = aws_eks_cluster.example.identity[0].oidc[0].issuer
 }
-
 
 # EBS CSI Driver - IAM role (trusted via IRSA) and managed add-on
 
