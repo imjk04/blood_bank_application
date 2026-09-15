@@ -31,7 +31,7 @@ data "aws_vpc" "default" {
   default = true
 }
 
-# Only include subnets in supported AZs
+# Exclude unsupported AZ (us-east-1e)
 data "aws_subnets" "public" {
   filter {
     name   = "vpc-id"
